@@ -18,7 +18,7 @@ Download `cmon` then put anywhere you want, e.g.,
 ### Example:
 
 ```
-hn@mmt-probe1:/home/server10g/hn# ./cmon
+./cmon
 CPU usage:  1% (Thu Mar 23 15:50:56 CET 2017)             
 20  ..........||............||||||||||...........................
 16  ..........||....|.......||||||||||...........................
