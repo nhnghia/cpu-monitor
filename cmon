@@ -1,0 +1,198 @@
+#!/bin/bash
+
+if [[ $# -eq 1 ]]; then
+   PROGRAM=$1
+fi
+
+
+LEN=60
+
+HISTORY="0"
+INDEX=0
+
+FIRST="YES"
+
+#move cursor up <n> lines
+function move_cursor_up {
+   line=$1
+   echo -ne "\033[${line}A"
+}
+
+#draw bar chart
+function draw {
+   input=$1
+   if [[ "$input" == "" ]]; then
+      input=0
+   fi  
+
+   #store history
+   HISTORY="$input $HISTORY"
+
+   #if history is full
+   if [[ "$INDEX" == "$LEN" ]]; then
+      #remove the oldest element (on the right)
+      HISTORY=$(echo $HISTORY | tr ' ' '\n' | head -n-1 | xargs)
+   else
+      INDEX=$((INDEX+1))
+   fi  
+
+   #get max number in HISTORYTORY
+   MAX=$(printf "%s\n" $HISTORY | sort -g | tail -1)
+  
+   #draw 5 lines
+   val=$((MAX/5))
+   if [[ $val -eq 0 ]]; then
+      val=1
+   fi  
+
+   r0="    " 
+   r1="    "
+   r2="    " 
+   r3="    "
+   r4="    "
+   r5="    "
+   
+   #fill 5 lines
+   for i in $HISTORY; do
+      if [[ $i -ge $((val*5)) ]]; then
+         r0="$r0|"
+         r1="$r1|"
+         r2="$r2|"
+         r3="$r3|"
+         r4="$r4|"
+         r5="$r5|"
+      else 
+         if [[ $i -ge $((val*4)) ]]; then
+            r0="$r0|"
+            r1="$r1|"
+            r2="$r2|"
+            r3="$r3|"
+            r4="$r4|" 
+            r5="$r5."
+         else
+             if [[ $i -ge $((val*3)) ]]; then
+               r0="$r0|"
+               r1="$r1|"
+               r2="$r2|"
+               r3="$r3|"
+               r4="$r4."
+               r5="$r5."
+            else
+               if [[ $i -ge $((val*2)) ]]; then
+                  r0="$r0|"
+                  r1="$r1|"
+                  r2="$r2|"
+                  r3="$r3."
+                  r4="$r4."
+                  r5="$r5."
+               else
+                  if [[ $i -ge $val ]]; then
+                     r0="$r0|"
+                     r1="$r1|"
+                     r2="$r2."
+                     r3="$r3."
+                     r4="$r4."
+                     r5="$r5."
+                  else
+                     if [[ $i -gt 0 ]]; then
+                        r0="$r0|"
+                        r1="$r1."
+                        r2="$r2."
+                        r3="$r3."
+                        r4="$r4."
+                        r5="$r5."
+                     else
+                        r0="$r0."
+                        r1="$r1."
+                        r2="$r2."
+                        r3="$r3."
+                        r4="$r4."
+                        r5="$r5."
+                     fi
+                  fi
+               fi
+            fi
+         fi
+      fi
+   done
+   for (( i=$INDEX;i<$LEN;i++ )); do
+      r0="$r0."
+      r1="$r1."
+      r2="$r2."
+      r3="$r3."
+      r4="$r4."
+      r5="$r5."
+   done
+
+
+   #horizontal axis
+   rx="    "
+   for (( i=0;i<=$LEN;i++ )); do
+      case "$i" in
+        9|19|29|39|49|59)
+            ;;
+        0|10|20|30|40|50|60)
+           rx="$rx$i" ;;
+        *)
+           rx="$rx " ;;
+      esac
+   done
+
+   if [[ -n "$FIRST" ]]; then
+      #need 8lines
+      echo 
+      echo 
+      echo 
+      echo 
+      echo 
+      echo 
+      echo 
+      echo 
+      unset FIRST
+   fi
+
+      move_cursor_up 8
+      echo "CPU usage: $PROGRAM $input% (`date`)            "
+      echo -n "${r5}"; echo -e "\r$((val*5))" 
+      echo -n "${r4}"; echo -e "\r$((val*4))" 
+      echo -n "${r3}"; echo -e "\r$((val*3))" 
+      echo -n "${r2}"; echo -e "\r$((val*2))" 
+      echo -n "${r1}"; echo -e "\r$((val*1))" 
+      echo -n "${r0}"; echo -e "\r$((val*0))" 
+      echo "${rx}"
+}
+
+CPUS_COUNT=$(nproc --all)
+
+function get_cpu {
+   #get cpu usage of a specific program
+   if [[ -n "$PROGRAM" ]]; then
+      #tested on ubuntu 14.04
+      #top -n2 will sleep 1 second
+      CPU=$(top -bd1 -n2 | grep "hn" | cut -c 48-54 | tail -n1 | cut -d '.' -f1)
+
+      #number of cores using by the program
+      CPUS_COUNT=$(ps -C hn -L -o cpuid | uniq | wc -l)
+
+      if [[ $CPUS_COUNT -eq 0 ]]; then
+         CPU=0;
+      else
+         if [[ -n "$CPU" ]]; then
+            CPU=$((CPU/CPUS_COUNT))
+         else
+            CPU=0
+         fi
+      fi
+  else
+      #tested on ubuntu 14.04
+      #top -n2 will sleep 1 second
+      CPU=$(top -b -d1 -n2 | grep Cpu | cut -c 9-13 | tail -n1 | cut -d '.' -f1 )
+   fi
+
+   #draw graph
+   draw $CPU
+}
+
+while true; do
+   get_cpu
+done
