@@ -5,7 +5,7 @@ Cpu monitor using bash script. It has been tested on Ubuntu 14.04.
 
 Download `cmon` then put anywhere you want, e.g.,
 
-`wget -0 cmon https://raw.githubusercontent.com/nhnghia/cpu-monitor/master/cmon && chmod +x cmon`
+`wget -O cmon https://raw.githubusercontent.com/nhnghia/cpu-monitor/master/cmon && chmod +x cmon`
 
 # Run
 
