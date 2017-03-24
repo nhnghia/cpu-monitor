@@ -40,10 +40,7 @@ function draw {
    MAX=$(printf "%s\n" $HISTORY | sort -g | tail -1)
   
    #draw 5 lines
-   val=$((MAX/5))
-   if [[ $val -eq 0 ]]; then
-      val=1
-   fi  
+   val=$((MAX/5+1))
 
    r0="    " 
    r1="    "
