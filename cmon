@@ -164,13 +164,14 @@ CPUS_COUNT=$(nproc --all)
 function get_cpu {
    #get cpu usage of a specific program
    if [[ -n "$PROGRAM" ]]; then
+      PROG_NAME=$(echo $PROGRAM | cut -c 1-15)
       #tested on ubuntu 14.04
       #top -n2 will sleep 1 second
-      CPU=$(top -bd1 -n2 | grep "hn" | cut -c 48-54 | tail -n1 | cut -d '.' -f1)
+      CPU=$(top -bd1 -n2 | grep $PROG_NAME | cut -c 48-54 | tail -n1 | cut -d '.' -f1)
 
       #number of cores using by the program
-      CPUS_COUNT=$(ps -C hn -L -o cpuid | uniq | wc -l)
-
+      CPUS_COUNT=$(ps -C "$PROGRAM" -L -o cpuid | tail -n+2 | uniq  | wc -l)
+      
       if [[ $CPUS_COUNT -eq 0 ]]; then
          CPU=0;
       else
